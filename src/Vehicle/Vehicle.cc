@@ -439,9 +439,10 @@ void Vehicle::_mavlinkMessageReceived(LinkInterface* link, mavlink_message_t mes
         break;
 
     // Following are ArduPilot dialect messages
-
+#ifdef MAVLINK_ARDUPILOTMEGA_H
     case MAVLINK_MSG_ID_WIND:
         _handleWind(message);
+#endif
         break;
     }
 
@@ -514,6 +515,8 @@ void Vehicle::_handleVibration(mavlink_message_t& message)
     _vibrationFactGroup.clipCount3()->setRawValue(vibration.clipping_2);
 }
 
+#ifdef MAVLINK_ENABLED_ARDUPILOTMEGA
+/* Ardupilotmega specific function */
 void Vehicle::_handleWind(mavlink_message_t& message)
 {
     mavlink_wind_t wind;
@@ -523,6 +526,8 @@ void Vehicle::_handleWind(mavlink_message_t& message)
     _windFactGroup.speed()->setRawValue(wind.speed);
     _windFactGroup.verticalSpeed()->setRawValue(wind.speed_z);
 }
+
+#endif
 
 void Vehicle::_handleSysStatus(mavlink_message_t& message)
 {
@@ -548,6 +553,7 @@ void Vehicle::_handleSysStatus(mavlink_message_t& message)
         }
     }
 }
+
 
 void Vehicle::_handleBatteryStatus(mavlink_message_t& message)
 {

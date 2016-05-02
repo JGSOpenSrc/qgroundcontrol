@@ -746,6 +746,19 @@ void UAS::receiveMessage(mavlink_message_t message)
             emit logData(this, log.ofs, log.id, log.count, log.data);
         }
             break;
+ #ifdef MAVLINK_SMELLOCOPTER_H
+        /* Smellocopter project messages */
+        case MAVLINK_MSG_ID_EAG_RAW:
+        {
+            qDebug() << "EAG_RAW message received!";
+            mavlink_eag_raw_t eag_raw;
+            mavlink_msg_eag_raw_decode(&message, &eag_raw);
+
+            emit valueChanged(this->uasId, "eag raw data", "int",
+                              eag_raw.raw_data, eag_raw.time_stamp);
+            break;
+        }
+#endif
 
         default:
             break;
