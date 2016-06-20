@@ -44,9 +44,11 @@ SensorsComponentController::SensorsComponentController(void) :
     _levelButton(NULL),
     _cancelButton(NULL),
     _showOrientationCalArea(false),
+    _irSensorButton(NULL),
     _gyroCalInProgress(false),
     _magCalInProgress(false),
     _accelCalInProgress(false),
+    _irCalInProgress(false),
     _orientationCalDownSideDone(false),
     _orientationCalUpsideDownSideDone(false),
     _orientationCalLeftSideDone(false),
@@ -223,6 +225,81 @@ void SensorsComponentController::calibrateAirspeed(void)
     _startLogCalibration();
     _uas->startCalibration(UASInterface::StartCalibrationAirspeed);
 }
+
+#ifdef MAVLINK_MSG_ID_IR_CALIBRATION
+void SensorsComponentController::calibrateIRsensor(void)
+{
+    _startLogCalibration();
+    connect(_uas, &UASInterface::irCalibrationMessage, this, &SensorsComponentController::irCalibrationMessageHandle);
+    _uas->startCalibration(UASInterface::StartCalibrationIRsensor);
+    _irCalInProgress = true;
+    _irSensorButton->setEnabled(false);
+    _startVisualCalibration();
+     QString message("Hold the vehicle in a level position at 20cm above the ground.");
+     _appendStatusLog(message);
+}
+
+void SensorsComponentController::irCalibrationMessageHandle(int uasId, mavlink_ir_calibration_t msg)
+{
+    if (uasId != _uas->getUASID())
+    {
+        return;
+    }
+    // Strings for holding debug messages
+    QString value;
+    QString message;
+
+    static int distance_cm = 20;
+
+    switch (msg.data_code) {
+
+    case IR_CAL_CODE_START:
+        distance_cm = 20;
+        break;
+
+    case IR_CAL_CODE_FINISH:
+        _irCalInProgress = false;
+        disconnect(_uas, &UASInterface::irCalibrationMessage, this, &SensorsComponentController::irCalibrationMessageHandle);
+        _irSensorButton->setEnabled(true);
+        _stopCalibration(StopCalibrationSuccess);
+        break;
+
+    case IR_CAL_CODE_SAMPLE:
+        value.setNum(msg.data);
+
+        _progressBar->setProperty("value", (float)(distance_cm / 120.f));
+
+        message = QString("Calibration parameter received: %1 volts at %2 cm").arg(value).arg(distance_cm);
+        qDebug() << message;
+        _appendStatusLog(message);
+
+        distance_cm += 20;
+        message = QString("Hold the vehicle in a level position at %1 cm above the ground").arg(distance_cm);
+        _appendStatusLog(message);
+
+        break;
+
+    case IR_CAL_CODE_SAMPLE_VAR:
+        value.setNum(msg.data);
+        message = QString("Calibration parameter variance: %1").arg(value);
+        qDebug() << message;
+        _appendStatusLog(message);
+        break;
+
+    case IR_CAL_CODE_EST_COEFF:
+        value.setNum(msg.data);
+        message = QString("Estimator coefficient: %1").arg(value);
+        qDebug() << message;
+        _appendStatusLog(message);
+        break;
+
+    default:
+        qDebug() << "Uknown calibration message received";
+        break;
+    }
+}
+
+#endif
 
 void SensorsComponentController::_handleUASTextMessage(int uasId, int compId, int severity, QString text)
 {

@@ -48,6 +48,7 @@ QGCView {
     readonly property string accelHelp:     qsTr("For Accelerometer calibration you will need to place your vehicle on all six sides on a perfectly level surface and hold it still in each orientation for a few seconds.")
     readonly property string levelHelp:     qsTr("To level the horizon you need to place the vehicle in its level flight position and press OK.")
     readonly property string airspeedHelp:  qsTr("For Airspeed calibration you will need to keep your airspeed sensor out of any wind and then blow across the sensor.")
+    readonly property string irSensorHelp:  qsTr("For infrared range sensor calibration you will need to hold your vehicle in a level position at a number of heights from the ground. It is reccomended to do this wirelessly with the telemetry link.")
 
     readonly property string statusTextAreaDefaultText: qsTr("Start the individual calibration steps by clicking one of the buttons above.")
 
@@ -121,6 +122,7 @@ QGCView {
         airspeedButton:             airspeedButton
         levelButton:                levelButton
         cancelButton:               cancelButton
+        irSensorButton:             irSensorButton
         orientationCalAreaHelpText: orientationCalAreaHelpText
 
         onResetStatusTextArea: statusLog.text = statusTextAreaDefaultText
@@ -168,7 +170,10 @@ QGCView {
                     controller.calibrateCompass()
                 } else if (preCalibrationDialogType == "airspeed") {
                     controller.calibrateAirspeed()
+                } else if (preCalibrationDialogType == "ir") {
+                    controller.calibrateIRsensor()
                 }
+
                 preCalibrationDialog.hideDialog()
             }
 
@@ -355,6 +360,19 @@ QGCView {
                         preCalibrationDialogType = "airspeed"
                         preCalibrationDialogHelp = airspeedHelp
                         showDialog(preCalibrationDialogComponent, qsTr("Calibrate Airspeed"), qgcView.showDialogDefaultWidth, StandardButton.Cancel | StandardButton.Ok)
+                    }
+                }
+
+                IndicatorButton {
+                    id:             irSensorButton
+                    width:          parent.buttonWidth
+                    text:           qsTr("Infrared Range")
+                    indicatorGreen: true
+
+                    onClicked: {
+                        preCalibrationDialogType = "ir"
+                        preCalibrationDialogHelp = irSensorHelp
+                        showDialog(preCalibrationDialogComponent, qsTr("Infrared Range"), qgcView.showDialogDefaultWidth, StandardButton.Cancel | StandardButton.Ok)
                     }
                 }
 

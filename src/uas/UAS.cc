@@ -750,13 +750,27 @@ void UAS::receiveMessage(mavlink_message_t message)
         /* Smellocopter project messages */
         case MAVLINK_MSG_ID_EAG_RAW:
         {
-            qDebug() << "EAG_RAW message received!";
             mavlink_eag_raw_t eag_raw;
             mavlink_msg_eag_raw_decode(&message, &eag_raw);
 
             emit valueChanged(this->uasId, "eag raw data", "int",
                               eag_raw.raw_data, eag_raw.time_stamp);
             break;
+        }
+        case MAVLINK_MSG_ID_IR_CALIBRATION:
+        {
+            mavlink_ir_calibration_t ir_cal;
+            mavlink_msg_ir_calibration_decode(&message, &ir_cal);
+            emit irCalibrationMessage(this->uasId,ir_cal);
+        }
+#endif
+
+#ifdef MAVLINK_MSG_ID_DISTANCE_SENSOR_FILTERED
+        case MAVLINK_MSG_ID_DISTANCE_SENSOR_FILTERED:
+        {
+            mavlink_distance_sensor_filtered_t dist_filtered;
+            mavlink_msg_distance_sensor_filtered_decode(&message, &dist_filtered);
+            emit valueChanged(this->uasId, "distance sensor filter", "cm", 100.f*dist_filtered.current_distance, dist_filtered.timestamp);
         }
 #endif
 
@@ -807,6 +821,17 @@ void UAS::startCalibration(UASInterface::StartCalibrationType calType)
         case StartCalibrationUavcanEsc:
             escCal = 2;
             break;
+        case StartCalibrationIRsensor:
+            // instead maybe pack a custom mavlink message in here rather than try and hack on CMD_PREFLIGHT_CALIBRATION
+            mavlink_message_t msg;
+            mavlink_msg_ir_calibration_pack(mavlink->getSystemId(),
+                                            mavlink->getComponentId(),
+                                            &msg,
+                                            IR_CAL_CODE_START,
+                                            0.f,
+                                            0);
+            _vehicle->sendMessageOnPriorityLink(msg);
+        break;
     }
 
     mavlink_message_t msg;

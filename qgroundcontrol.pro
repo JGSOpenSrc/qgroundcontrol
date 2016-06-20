@@ -310,6 +310,7 @@ HEADERS += \
     src/QmlControls/QGCImageProvider.h \
     src/AutoPilotPlugins/APM/APMRemoteParamsDownloader.h \
     src/QtLocationPlugin/QMLControl/QGCMapEngineManager.h \
+    src/uas/smellocopter.h
 
 DebugBuild {
 HEADERS += \

@@ -56,6 +56,10 @@ public:
     Q_PROPERTY(QQuickItem* levelButton MEMBER _levelButton)
     Q_PROPERTY(QQuickItem* cancelButton MEMBER _cancelButton)
     Q_PROPERTY(QQuickItem* orientationCalAreaHelpText MEMBER _orientationCalAreaHelpText)
+
+
+    Q_PROPERTY(QQuickItem* irSensorButton MEMBER _irSensorButton)
+
     
     Q_PROPERTY(bool showOrientationCalArea MEMBER _showOrientationCalArea NOTIFY showOrientationCalAreaChanged)
     
@@ -94,7 +98,9 @@ public:
     Q_INVOKABLE void calibrateAccel(void);
     Q_INVOKABLE void calibrateLevel(void);
     Q_INVOKABLE void calibrateAirspeed(void);
+    Q_INVOKABLE void calibrateIRsensor(void);
     Q_INVOKABLE void cancelCalibration(void);
+
     Q_INVOKABLE bool usingUDPLink(void);
     
     bool fixedWing(void);
@@ -112,6 +118,10 @@ signals:
     
 private slots:
     void _handleUASTextMessage(int uasId, int compId, int severity, QString text);
+
+#ifdef MAVLINK_MSG_ID_IR_CALIBRATION
+    void irCalibrationMessageHandle(int uasId, mavlink_ir_calibration_t msg);
+#endif
     
 private:
     void _startLogCalibration(void);
@@ -139,6 +149,8 @@ private:
     QQuickItem* _levelButton;
     QQuickItem* _cancelButton;
     QQuickItem* _orientationCalAreaHelpText;
+
+    QQuickItem* _irSensorButton;
     
     bool _showGyroCalArea;
     bool _showOrientationCalArea;
@@ -146,7 +158,9 @@ private:
     bool _gyroCalInProgress;
     bool _magCalInProgress;
     bool _accelCalInProgress;
-    
+
+    bool _irCalInProgress;
+
     bool _orientationCalDownSideDone;
     bool _orientationCalUpsideDownSideDone;
     bool _orientationCalLeftSideDone;
